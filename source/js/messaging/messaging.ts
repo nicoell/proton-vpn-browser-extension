@@ -16,6 +16,7 @@ import {sendForkResponse} from '../tools/openTabs';
 import {setupHandleProxyRequest} from '../tools/setupHandleProxyRequest';
 import {record} from '../log/record';
 import {forkSession} from './forkSession';
+import {provisionSession} from './provisionSession';
 
 export const routeMessage = async (message: { type: BackgroundMessage, data: any }): Promise<any> => {
 	const { type, data } = message;
@@ -23,6 +24,11 @@ export const routeMessage = async (message: { type: BackgroundMessage, data: any
 	switch (type) {
 		case BackgroundAction.FORK:
 			await sendForkResponse((message as any).tabId, await forkSession(message));
+
+			return null;
+
+		case BackgroundAction.PROVISION_SESSION:
+			await provisionSession(message);
 
 			return null;
 

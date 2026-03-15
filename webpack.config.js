@@ -80,6 +80,15 @@ module.exports = (env, argv, options) => {
 				],
 				run_at: 'document_start',
 			},
+			{
+				all_frames: false,
+				js: ['js/provisionBridge.js'],
+				matches: [
+					'http://localhost/*',
+					'http://127.0.0.1/*',
+				],
+				run_at: 'document_start',
+			},
 		];
 		manifest.background = {
 			scripts: ['js/browser-polyfill.min.js', 'js/background.js'],
@@ -166,6 +175,7 @@ module.exports = (env, argv, options) => {
 			background: './source/js/background.ts',
 			onboarding: './source/js/onboarding.ts',
 			popup: './source/js/popup.ts',
+			provisionBridge: './source/js/provisionBridge.ts',
 			transmit: './source/js/transmit.ts',
 			['css/popup']: './source/css/popup.scss',
 			['css/onboarding']: './source/css/onboarding.scss',

@@ -16,6 +16,7 @@ export enum PermissionGrant {
 
 export enum BackgroundAction {
 	FORK = 'fork',
+	PROVISION_SESSION = 'provisionSession',
 	FORGET_ERROR = 'forgetError',
 	LOG = 'log',
 }
