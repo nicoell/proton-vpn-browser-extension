@@ -63,9 +63,6 @@ module.exports = (env, argv, options) => {
 				strict_min_version: '109.0',
 			},
 		};
-		manifest.optional_permissions = [
-			'proxy'
-		];
 		manifest.content_scripts = [
 			{
 				all_frames: true,
@@ -95,12 +92,15 @@ module.exports = (env, argv, options) => {
 		};
 		manifest.permissions = manifest.permissions.filter(
 			permission => permission !== 'webRequestAuthProvider'
-				&& permission !== 'proxy',
+				&& permission !== 'proxy'
+				&& permission !== 'activeTab',
 		);
 		manifest.permissions.push(
+			'proxy',
 			'activeTab',
 			'webRequestBlocking',
 		);
+		delete manifest.optional_permissions;
 		delete manifest.key;
 		delete manifest.externally_connectable;
 	};
