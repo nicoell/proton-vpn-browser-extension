@@ -1,4 +1,5 @@
 const BRIDGE_TYPE = 'provisionSession';
+const BRIDGE_RESULT_TYPE = 'provisionSessionResult';
 
 type ProvisionSessionPayload = {
 	uid: string;
@@ -7,6 +8,7 @@ type ProvisionSessionPayload = {
 	persistent: boolean;
 	redirectURI?: string;
 	partnerId?: string;
+	setup?: Record<string, unknown>;
 };
 
 type ProvisionBridgeMessage = {
@@ -26,7 +28,9 @@ const isProvisionSessionPayload = (data: unknown): data is ProvisionSessionPaylo
 		&& typeof payload['refreshToken'] === 'string'
 		&& typeof payload['persistent'] === 'boolean'
 		&& (typeof payload['redirectURI'] === 'undefined' || typeof payload['redirectURI'] === 'string')
-		&& (typeof payload['partnerId'] === 'undefined' || typeof payload['partnerId'] === 'string');
+		&& (typeof payload['partnerId'] === 'undefined' || typeof payload['partnerId'] === 'string')
+		&& (typeof payload['setup'] === 'undefined'
+			|| (!!payload['setup'] && typeof payload['setup'] === 'object' && !Array.isArray(payload['setup'])));
 };
 
 window.addEventListener('message', (event: MessageEvent<ProvisionBridgeMessage>) => {
@@ -45,5 +49,21 @@ window.addEventListener('message', (event: MessageEvent<ProvisionBridgeMessage>)
 	chrome.runtime.sendMessage({
 		type: 'provisionSession',
 		data: event.data.data,
+	}, (response) => {
+		const lastError = chrome.runtime.lastError;
+		window.postMessage({
+			type: BRIDGE_RESULT_TYPE,
+			data: lastError
+				? {
+					received: false,
+					success: false,
+					result: {
+						error: {
+							message: lastError.message || 'Unknown runtime messaging error',
+						},
+					},
+				}
+				: response,
+		}, window.location.origin);
 	});
 }, false);
