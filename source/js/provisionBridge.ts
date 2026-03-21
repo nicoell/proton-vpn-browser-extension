@@ -1,5 +1,7 @@
-const BRIDGE_TYPE = 'provisionSession';
-const BRIDGE_RESULT_TYPE = 'provisionSessionResult';
+const PROVISION_BRIDGE_TYPE = 'provisionSession';
+const PROVISION_BRIDGE_RESULT_TYPE = 'provisionSessionResult';
+const STATUS_BRIDGE_TYPE = 'protonVpnStatus';
+const STATUS_BRIDGE_RESULT_TYPE = 'protonVpnStatusResult';
 
 type ProvisionSessionPayload = {
 	uid: string;
@@ -38,21 +40,44 @@ window.addEventListener('message', (event: MessageEvent<ProvisionBridgeMessage>)
 		return;
 	}
 
-	if (event.data?.type !== BRIDGE_TYPE) {
+	if (event.data?.type === PROVISION_BRIDGE_TYPE) {
+		if (!isProvisionSessionPayload(event.data.data)) {
+			return;
+		}
+
+		chrome.runtime.sendMessage({
+			type: 'provisionSession',
+			data: event.data.data,
+		}, (response) => {
+			const lastError = chrome.runtime.lastError;
+			window.postMessage({
+				type: PROVISION_BRIDGE_RESULT_TYPE,
+				data: lastError
+					? {
+						received: false,
+						success: false,
+						result: {
+							error: {
+								message: lastError.message || 'Unknown runtime messaging error',
+							},
+						},
+					}
+					: response,
+			}, window.location.origin);
+		});
 		return;
 	}
 
-	if (!isProvisionSessionPayload(event.data.data)) {
+	if (event.data?.type !== STATUS_BRIDGE_TYPE) {
 		return;
 	}
 
 	chrome.runtime.sendMessage({
-		type: 'provisionSession',
-		data: event.data.data,
+		type: 'vpnStatus',
 	}, (response) => {
 		const lastError = chrome.runtime.lastError;
 		window.postMessage({
-			type: BRIDGE_RESULT_TYPE,
+			type: STATUS_BRIDGE_RESULT_TYPE,
 			data: lastError
 				? {
 					received: false,

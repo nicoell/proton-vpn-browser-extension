@@ -2,7 +2,14 @@
 import {readSession} from '../account/readSession';
 import {getFreshUser} from '../account/user/getUser';
 import {getPmUser} from '../account/user/getPmUser';
-import {connectLogical, disconnect, getCurrentState, logOut} from '../state';
+import {
+	connectLogical,
+	disconnect,
+	getCurrentState,
+	getCurrentStateIfDefined,
+	logOut,
+	waitForReadyState
+} from '../state';
 import {createSession} from '../account/createSession';
 import {
 	BackgroundAction,
@@ -58,6 +65,22 @@ export const routeMessage = async (message: { type: BackgroundMessage, data: any
 
 		case BackgroundData.STATE:
 			return getCurrentState().data;
+
+		case BackgroundData.VPN_STATUS: {
+			await waitForReadyState();
+			const state = getCurrentStateIfDefined() || getCurrentState();
+			const error = state.data?.error as {message?: string} | undefined;
+
+			return {
+				state: state.name,
+				connected: state.name === 'on',
+				loggedIn: state.name !== 'loggedout',
+				starting: !!state.data?.starting,
+				proxyEnabled: !!state.proxyEnabled,
+				server: state.data?.server,
+				error: error?.message ? {message: error.message} : undefined,
+			};
+		}
 
 		case StateChange.DISCONNECT:
 			disconnect();

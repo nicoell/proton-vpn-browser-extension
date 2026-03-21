@@ -67,12 +67,14 @@ rm -rf vpn-bex
 # Localhost Provisioning Bridge
 
 This extension includes a small localhost provisioning bridge so a local page
-can seed the extension without going through the normal account website flow.
+can seed the extension without going through the normal account website flow,
+and a small localhost status bridge so a local page can query the current VPN state.
 
 The moving pieces are:
 
 - `source/js/provisionBridge.ts`
   Listens for `window.postMessage(...)` on `http://localhost/*` and `http://127.0.0.1/*`.
+  Handles both session provisioning and VPN status queries.
 - `source/js/messaging/provisionSession.ts`
   Saves the Proton session into extension storage.
 - `source/js/messaging/applyProvisioningSetup.ts`
@@ -83,6 +85,7 @@ Important constraints:
 - The provisioning page must be served from `http://localhost/...` or `http://127.0.0.1/...`.
 - `file://...` pages will not work because the content script is only injected on localhost URLs.
 - The page must post a message with `type: "provisionSession"` to `window.location.origin`.
+- Status pages can post a message with `type: "protonVpnStatus"` to `window.location.origin`.
 
 ## Payload Shape
 

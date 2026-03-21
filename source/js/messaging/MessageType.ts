@@ -25,6 +25,7 @@ export enum BackgroundData {
 	USER = 'user',
 	PM_USER = 'pmUser',
 	STATE = 'state',
+	VPN_STATUS = 'vpnStatus',
 }
 
 export type BackgroundMessage =
