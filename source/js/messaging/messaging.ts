@@ -35,9 +35,7 @@ export const routeMessage = async (message: { type: BackgroundMessage, data: any
 			return null;
 
 		case BackgroundAction.PROVISION_SESSION:
-			await provisionSession(message);
-
-			return null;
+			return await provisionSession(message);
 
 		case BackgroundData.USER:
 			if (!(await readSession())?.uid) {
@@ -70,6 +68,7 @@ export const routeMessage = async (message: { type: BackgroundMessage, data: any
 			await waitForReadyState();
 			const state = getCurrentStateIfDefined() || getCurrentState();
 			const error = state.data?.error as {message?: string} | undefined;
+			const session = await readSession();
 
 			return {
 				state: state.name,
@@ -78,7 +77,13 @@ export const routeMessage = async (message: { type: BackgroundMessage, data: any
 				starting: !!state.data?.starting,
 				proxyEnabled: !!state.proxyEnabled,
 				server: state.data?.server,
-				error: error?.message ? {message: error.message} : undefined,
+				error: error?.message
+					? {message: error.message}
+					: (state.name === 'loggedout' ? {message: 'Logged out'} : undefined),
+				session: {
+					present: !!session?.uid,
+					refreshTokenPresent: !!session?.refreshToken,
+				},
 			};
 		}
 

@@ -1,7 +1,31 @@
 import {applyProvisioningSetup, type ProvisioningSetup} from './applyProvisioningSetup';
 import {Session} from '../account/Session';
+import {readSession} from '../account/readSession';
 import {saveSession} from '../account/saveSession';
 import {getFreshUser} from '../account/user/getUser';
+
+const PROVISION_SESSION_SAVE_ATTEMPTS = 5;
+const PROVISION_SESSION_SAVE_DELAY_MS = 50;
+
+const delay = async (ms: number): Promise<void> => {
+	await new Promise(resolve => setTimeout(resolve, ms));
+};
+
+const hasProvisionedSession = (session?: Session | null): session is Session => Boolean(session?.uid && session?.refreshToken);
+
+const saveAndVerifyProvisionedSession = async (session: Session): Promise<Session> => {
+	for (let attempt = 0; attempt < PROVISION_SESSION_SAVE_ATTEMPTS; attempt++) {
+		await saveSession(session);
+		await delay(PROVISION_SESSION_SAVE_DELAY_MS);
+
+		const savedSession = await readSession();
+		if (hasProvisionedSession(savedSession)) {
+			return savedSession;
+		}
+	}
+
+	throw new Error(`Provision session could not be observed after ${PROVISION_SESSION_SAVE_ATTEMPTS} save attempts`);
+};
 
 export interface ProvisionSessionMessage {
 	data?: {
@@ -45,7 +69,7 @@ export const provisionSession = async (message: ProvisionSessionMessage): Promis
 		partnerId,
 	};
 
-	await saveSession(session);
+	await saveAndVerifyProvisionedSession(session);
 	const user = await getFreshUser();
 	if (user) {
 		const result = await applyProvisioningSetup(setup, user);
